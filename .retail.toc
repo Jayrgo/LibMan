@@ -1,0 +1,6 @@
+## Interface: 80300
+## Title: LibMan |cffbebebeby Jayrgo|r
+## Author: Jayrgo
+## Version: 1.0.0
+
+LibMan.lua

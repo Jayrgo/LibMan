@@ -1,0 +1,80 @@
+name: Main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: luacheck
+        uses: Jayrgo/luacheck-action@v1
+      - name: Create changelog
+        uses: TriPSs/conventional-changelog-action@v3
+        id: changelog
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          preset: conventionalcommits
+          release-count: 1
+          skip-version-file: true
+          pre-commit: .pre-commit.js
+      - name: Create release
+        uses: actions/create-release@v1
+        id: release
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.changelog.outputs.tag }}
+          release_name: ${{ steps.changelog.outputs.tag }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
+      - name: "[retail] Prepare toc"
+        run: |
+          cp .retail.toc "${{ github.event.repository.name }}.toc"
+          git add "${{ github.event.repository.name }}.toc"
+          git commit -m "chore: Release"
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+      - name: "[retail] Create archive"
+        uses: jayrgo/git-archive-all-action@v1
+        with:
+          output: "${{ github.event.repository.name }}-${{ steps.changelog.outputs.tag }}.zip"
+          args: --prefix="${{ github.event.repository.name }}/"
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+      - name: "[retail] Upload archive"
+        uses: actions/upload-release-asset@v1
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: "${{ github.event.repository.name }}-${{ steps.changelog.outputs.tag }}.zip"
+          asset_name: "${{ github.event.repository.name }}-${{ steps.changelog.outputs.tag }}.zip"
+          asset_content_type: application/zip
+      - name: "[classic] Prepare toc"
+        run: |
+          cp .classic.toc "${{ github.event.repository.name }}.toc"
+          git add "${{ github.event.repository.name }}.toc"
+          git commit -m "chore: Release"
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+      - name: "[classic] Create archive"
+        uses: jayrgo/git-archive-all-action@v1
+        with:
+          output: "${{ github.event.repository.name }}-${{ steps.changelog.outputs.tag }}-classic.zip"
+          args: --prefix="${{ github.event.repository.name }}/"
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+      - name: "[classic] Upload archive"
+        uses: actions/upload-release-asset@v1
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: "${{ github.event.repository.name }}-${{ steps.changelog.outputs.tag }}-classic.zip"
+          asset_name: "${{ github.event.repository.name }}-${{ steps.changelog.outputs.tag }}-classic.zip"
+          asset_content_type: application/zip
