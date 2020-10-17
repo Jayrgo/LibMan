@@ -58,7 +58,6 @@ end
 ---@field build string|nil
 local Version = {_TYPE = "Version"}
 do
-
     local strfind = strfind
     local strsplit = strsplit
     local type = type
@@ -346,6 +345,7 @@ if not LibMan or _VERSION:IsGreaterThan(LibMan._VERSION) then
         ---@return string
         __tostring = function(self) return format("%s-%s", self._NAME, tostring(self._VERSION)) end,
     })
+    LibMan.Version = Version
     -- luacheck: push ignore 122
     _G[_GLOBALNAME] = LibMan
     _G.LibMan = (not _G.LibMan or _VERSION:IsGreaterThan(_G.LibMan._VERSION)) and LibMan or _G.LibMan
