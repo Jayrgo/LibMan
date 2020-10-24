@@ -1,4 +1,4 @@
-## Interface: 80300
+# Interface: 
 ## Title: LibMan |cffbebebeby Jayrgo|r
 ## Author: Jayrgo
 ## Version: 1.1.0

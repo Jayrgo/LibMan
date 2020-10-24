@@ -9,9 +9,11 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - name: Set name
-        run : |
+      - name: Set environment variables
+        run: |
           echo "NAME=LibMan" >> $GITHUB_ENV
+          echo "INTERFACE_RETAIL=90001" >> $GITHUB_ENV
+          echo "INTERFACE_CLASSIC=11305" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@v2
       - name: luacheck
@@ -37,7 +39,8 @@ jobs:
           body: ${{ steps.changelog.outputs.clean_changelog }}
       - name: "[retail] Create archive"
         run: |
-          cp .retail.toc ${{ env.NAME }}.toc
+          echo "$(tail -n +2 ${{ env.NAME }}.toc)" > ${{ env.NAME }}.toc
+          echo '## Interface: ${{ env.INTERFACE_RETAIL }}'$'\n'"$( cat ${{ env.NAME }}.toc)" > ${{ env.NAME }}.toc
           git add ${{ env.NAME }}.toc
           git commit -m "chore: Release"
           git archive -o "${{ env.NAME }}-${{ steps.changelog.outputs.tag }}.zip" --prefix "${{ env.NAME }}/" HEAD
@@ -58,7 +61,8 @@ jobs:
         if: ${{ steps.changelog.outputs.skipped == 'false' }}
       - name: "[classic] Create archive"
         run: |
-          cp .classic.toc ${{ env.NAME }}.toc
+          echo "$(tail -n +2 ${{ env.NAME }}.toc)" > ${{ env.NAME }}.toc
+          echo '## Interface: ${{ env.INTERFACE_CLASSIC }}'$'\n'"$( cat ${{ env.NAME }}.toc)" > ${{ env.NAME }}.toc
           git add ${{ env.NAME }}.toc
           git commit -m "chore: Release"
           git archive -o "${{ env.NAME }}-${{ steps.changelog.outputs.tag }}-classic.zip" --prefix "${{ env.NAME }}/" HEAD
